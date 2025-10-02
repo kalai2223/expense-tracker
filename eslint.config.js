@@ -1,36 +1,149 @@
-import tsParser from "@typescript-eslint/parser";
-import tsPlugin from "@typescript-eslint/eslint-plugin";
-import { defineConfig } from "eslint/config";
-import pluginReact from "eslint-plugin-react";
-import pluginImport from "eslint-plugin-import";
-import pluginUnusedImports from "eslint-plugin-unused-imports";
-import pluginPrettier from "eslint-plugin-prettier";
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import js from "@eslint/js";
+import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
+import { globalIgnores } from "eslint/config";
+import prettier from "eslint-config-prettier";
+import jsxA11y from "eslint-plugin-jsx-a11y";
+import importPlugin from "eslint-plugin-import";
+import unusedImports from "eslint-plugin-unused-imports";
+import react from "eslint-plugin-react";
+import prettierPlugin from "eslint-plugin-prettier";
 
-export default defineConfig([
+export default tseslint.config([
+  globalIgnores(["dist"]),
   {
-    files: ["**/*.{ts,tsx,js,jsx}"],
+    files: ["**/*.{ts,tsx,d.ts}"],
+
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs["recommended-latest"],
+      reactRefresh.configs.vite,
+      prettier,
+    ],
+
     languageOptions: {
-      parser: tsParser,
+      ecmaVersion: 2020,
+      sourceType: "module",
+
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+
       parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
-        ecmaFeatures: { jsx: true },
+        project: ["./tsconfig.eslint.json"],
       },
     },
+
     plugins: {
-      react: pluginReact,
-      import: pluginImport,
-      "unused-imports": pluginUnusedImports,
-      "@typescript-eslint": tsPlugin,
-      prettier: pluginPrettier,
+      react,
+      reactHooks,
+      reactRefresh,
+      import: importPlugin,
+      "unused-imports": unusedImports,
+      "jsx-a11y": jsxA11y,
+      prettier: prettierPlugin,
     },
+
     rules: {
-      "prettier/prettier": ["error"], // defers formatting to Prettier
-      semi: ["error", "always"],
-      indent: ["error", 2, { SwitchCase: 1 }],
-      "no-mixed-spaces-and-tabs": "error",
-      "no-console": "error",
-      "prefer-const": "warn",
+      ...reactRefresh.configs.vite.rules,
+
+      "no-console": ["error", { allow: ["warn", "error"] }],
+      "no-debugger": "error",
+      "no-multi-spaces": ["error"],
+      // Remove this line for TypeScript files
+      // 'no-unused-vars': ['error', { vars: 'all', args: 'after-used', ignoreRestSiblings: true }],
+
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "react/react-in-jsx-scope": "off",
+      "react/prop-types": "off",
+      "react/no-unescaped-entities": "off",
+      "react/no-unknown-property": "off",
+      "react/no-unused-vars": "off",
+      // ---------
+      "react/jsx-uses-react": "off",
+      "react/jsx-uses-vars": "error",
+      "react/jsx-key": "error",
+      "react/jsx-no-duplicate-props": "error",
+      "react/jsx-no-undef": "error",
+      "react/jsx-pascal-case": "error",
+
+      "jsx-a11y/alt-text": "warn",
+      "jsx-a11y/anchor-is-valid": "warn",
+      "jsx-a11y/aria-props": "warn",
+      "jsx-a11y/aria-proptypes": "warn",
+      "jsx-a11y/aria-unsupported-elements": "warn",
+      "jsx-a11y/role-has-required-aria-props": "warn",
+      "jsx-a11y/role-supports-aria-props": "warn",
+
+      "import/order": [
+        "error",
+        {
+          groups: [
+            "builtin",
+            "external",
+            "internal",
+            ["parent", "sibling", "index"],
+            "type",
+            "object",
+            "unknown",
+          ],
+          pathGroups: [
+            {
+              pattern: "react",
+              group: "external",
+              position: "before",
+            },
+            {
+              pattern: "@/**",
+              group: "internal",
+              position: "before",
+            },
+            {
+              pattern: "./**",
+              group: "internal",
+              position: "after",
+            },
+            {
+              pattern: "../**",
+              group: "internal",
+              position: "after",
+            },
+            {
+              pattern: "*.{css,scss,sass,less,styl}",
+              group: "unknown",
+              position: "after",
+            },
+            {
+              pattern: "*.module.{css,scss,sass,less,styl}",
+              group: "unknown",
+              position: "after",
+            },
+          ],
+          pathGroupsExcludedImportTypes: ["react"],
+          "newlines-between": "always",
+          alphabetize: {
+            order: "asc",
+            caseInsensitive: true,
+          },
+        },
+      ],
+      "import/no-cycle": "error",
+
+      "prefer-destructuring": [
+        "error",
+        {
+          object: true,
+          array: true,
+        },
+      ],
+      "prefer-const": ["error"],
+
       "unused-imports/no-unused-imports": "error",
       "unused-imports/no-unused-vars": [
         "error",
@@ -41,8 +154,52 @@ export default defineConfig([
           argsIgnorePattern: "^_",
         },
       ],
-      "react/react-in-jsx-scope": "off",
+
+      "object-curly-spacing": ["error", "always"],
+      "object-curly-newline": [
+        "error",
+        {
+          consistent: true,
+          multiline: true,
+          minProperties: 8,
+        },
+      ],
+      "object-property-newline": [
+        "error",
+        {
+          allowAllPropertiesOnSameLine: true,
+        },
+      ],
+
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          vars: "all",
+          varsIgnorePattern: "^_",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+        },
+      ],
+
+      "max-len": [
+        "error",
+        {
+          code: 200,
+          ignoreUrls: true,
+          ignoreComments: true,
+          ignoreTemplateLiterals: true,
+          ignoreStrings: true,
+          ignoreRegExpLiterals: true,
+        },
+      ],
+
+      "prettier/prettier": "error",
     },
-    settings: { react: { version: "detect" } },
+
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
   },
 ]);
